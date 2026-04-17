@@ -18,15 +18,10 @@ export default function SinglesMatch({
 }: SinglesMatchProps): ReactNode {
   const { player1Name, player2Name, player1Score, player2Score, currentServer, winner } = state;
 
-  const handleScore = (player: 1 | 2) => {
-    if (winner) return;
-    onScore(player);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-orange-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-cyan-50 flex flex-col">
       <header className="flex items-center p-4 bg-white bg-opacity-80 shadow-sm">
-        <button onClick={onBack} className="p-2 text-gray-500 hover:text-pink-400 transition-colors">
+        <button onClick={onBack} className="p-2 text-gray-500 hover:text-blue-400 transition-colors">
           ←
         </button>
         <h1 className="text-lg font-bold text-gray-800 flex-1 text-center pr-8">单打比赛</h1>
@@ -35,22 +30,22 @@ export default function SinglesMatch({
       <div className="flex-1 flex flex-col p-4 max-w-lg mx-auto w-full">
         <div className="bg-white bg-opacity-90 rounded-3xl shadow-lg p-6 mb-4">
           <div className="text-center mb-4">
-            <span className="text-sm text-pink-400 font-medium">
-              {currentServer === 1 ? player1Name : player2Name} 发球
+            <span className="text-sm text-blue-400 font-medium">
+              发球方: {currentServer === 1 ? player1Name : player2Name}
             </span>
           </div>
 
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="text-center flex-1">
-              <div className={`text-sm font-medium mb-2 ${currentServer === 1 ? 'text-pink-400' : 'text-gray-500'}`}>
+              <div className={`text-sm font-medium mb-2 ${currentServer === 1 ? 'text-blue-400' : 'text-gray-500'}`}>
                 {currentServer === 1 && <span className="mr-1">发</span>}
                 {player1Name}
               </div>
               <div className="text-6xl font-bold text-gray-800">{player1Score}</div>
               <button
-                onClick={() => handleScore(1)}
+                onClick={() => onScore(1)}
                 disabled={!!winner}
-                className="mt-4 w-full py-3 bg-gradient-to-r from-pink-400 to-pink-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="mt-4 w-full py-3 bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 +1
               </button>
@@ -59,28 +54,28 @@ export default function SinglesMatch({
             <div className="text-3xl font-bold text-gray-300">:</div>
 
             <div className="text-center flex-1">
-              <div className={`text-sm font-medium mb-2 ${currentServer === 2 ? 'text-pink-400' : 'text-gray-500'}`}>
+              <div className={`text-sm font-medium mb-2 ${currentServer === 2 ? 'text-blue-400' : 'text-gray-500'}`}>
                 {currentServer === 2 && <span className="mr-1">发</span>}
                 {player2Name}
               </div>
               <div className="text-6xl font-bold text-gray-800">{player2Score}</div>
               <button
-                onClick={() => handleScore(2)}
+                onClick={() => onScore(2)}
                 disabled={!!winner}
-                className="mt-4 w-full py-3 bg-gradient-to-r from-pink-400 to-pink-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="mt-4 w-full py-3 bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 +1
               </button>
             </div>
           </div>
 
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm text-gray-500 mb-4">
             {state.extendMatch ? '加分模式' : '不加分'} · {state.matchPoint}分制
           </div>
         </div>
 
         {winner && (
-          <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-3xl p-6 text-center mb-4 shadow-lg">
+          <div className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white rounded-3xl p-6 text-center mb-4 shadow-lg">
             <div className="text-lg font-bold mb-2">比赛结束</div>
             <div className="text-3xl font-bold">
               {winner === 1 ? player1Name : player2Name} 获胜！
@@ -91,7 +86,7 @@ export default function SinglesMatch({
             <div className="flex gap-4 mt-6">
               <button
                 onClick={onRestart}
-                className="flex-1 py-3 bg-white text-green-500 font-bold rounded-xl hover:bg-gray-100 transition-colors"
+                className="flex-1 py-3 bg-white text-blue-500 font-bold rounded-xl hover:bg-gray-100 transition-colors"
               >
                 重新开始
               </button>
@@ -108,8 +103,8 @@ export default function SinglesMatch({
                   <tr className="text-gray-500 border-b">
                     <th className="py-2 text-center">序号</th>
                     <th className="py-2 text-center">得分方</th>
-                    <th className="py-2 text-center">A队</th>
-                    <th className="py-2 text-center">B队</th>
+                    <th className="py-2 text-center">{player1Name}</th>
+                    <th className="py-2 text-center">{player2Name}</th>
                   </tr>
                 </thead>
                 <tbody>

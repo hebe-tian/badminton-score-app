@@ -28,7 +28,7 @@ export default function WuYunLunBiSetup({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-orange-50 p-4">
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-rose-50 p-4">
       <header className="flex items-center mb-8 pt-4">
         <button
           onClick={onBack}
@@ -54,7 +54,7 @@ export default function WuYunLunBiSetup({
                 value={name}
                 onChange={(e) => updateTeamPlayer('A', index, e.target.value)}
                 placeholder={`A${index + 1}`}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800"
+                className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white"
               />
             </div>
           ))}
@@ -72,7 +72,7 @@ export default function WuYunLunBiSetup({
                 value={name}
                 onChange={(e) => updateTeamPlayer('B', index, e.target.value)}
                 placeholder={`B${index + 1}`}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800"
+                className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white"
               />
             </div>
           ))}
@@ -114,7 +114,7 @@ export default function WuYunLunBiSetup({
             <select
               value={config.firstServerPlayer}
               onChange={(e) => onConfigChange({ firstServerPlayer: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white"
+              className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white"
             >
               {teamA.players.map((name, i) => (
                 <option key={`A${i}`} value={name}>A{i + 1}: {name}</option>
@@ -132,7 +132,7 @@ export default function WuYunLunBiSetup({
             <select
               value={config.firstReceiverPlayer}
               onChange={(e) => onConfigChange({ firstReceiverPlayer: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white"
+              className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white"
             >
               {teamB.players.map((name, i) => (
                 <option key={`B${i}`} value={name}>B{i + 1}: {name}</option>
@@ -174,7 +174,7 @@ export default function WuYunLunBiSetup({
 
         <button
           onClick={onStart}
-          className="w-full py-4 bg-gradient-to-r from-pink-400 to-orange-400 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:from-pink-500 hover:to-orange-500 transition-all"
+          className="w-full py-4 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:from-pink-500 hover:to-rose-500 transition-all"
         >
           开始比赛
         </button>

@@ -38,7 +38,7 @@ export default function WuYunLunBiMatch({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-orange-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-rose-50 flex flex-col">
       <header className="flex items-center p-4 bg-white bg-opacity-80 shadow-sm">
         <button onClick={onBack} className="p-2 text-gray-500 hover:text-pink-400 transition-colors">
           ←
@@ -82,7 +82,7 @@ export default function WuYunLunBiMatch({
               <button
                 onClick={() => handleScore('A')}
                 disabled={!!winner}
-                className="w-full py-3 bg-gradient-to-r from-pink-400 to-pink-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 A队得分
               </button>
@@ -109,7 +109,7 @@ export default function WuYunLunBiMatch({
               <button
                 onClick={() => handleScore('B')}
                 disabled={!!winner}
-                className="w-full py-3 bg-gradient-to-r from-pink-400 to-pink-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 B队得分
               </button>
@@ -126,7 +126,7 @@ export default function WuYunLunBiMatch({
         </div>
 
         {winner && (
-          <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-3xl p-6 text-center mb-4 shadow-lg">
+          <div className="bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-3xl p-6 text-center mb-4 shadow-lg">
             <div className="text-lg font-bold mb-2">比赛结束</div>
             <div className="text-3xl font-bold">
               {winner === 'A' ? 'A队' : 'B队'} 获胜！
@@ -137,7 +137,7 @@ export default function WuYunLunBiMatch({
             <div className="flex gap-4 mt-6">
               <button
                 onClick={onRestart}
-                className="flex-1 py-3 bg-white text-green-500 font-bold rounded-xl hover:bg-gray-100 transition-colors"
+                className="flex-1 py-3 bg-white text-pink-500 font-bold rounded-xl hover:bg-gray-100 transition-colors"
               >
                 重新开始
               </button>
