@@ -34,12 +34,21 @@ export interface DoublesMatchConfig {
   firstReceiverPlayer: string;
 }
 
+// 双打队伍位置追踪
+export interface TeamPositions {
+  evenCourtPlayer: string;  // 双数区球员标识符 (A1/A2 或 B1/B2)
+  oddCourtPlayer: string;   // 单数区球员标识符 (A1/A2 或 B1/B2)
+}
+
 export interface DoublesMatchState extends DoublesMatchConfig {
   teamAScore: number;
   teamBScore: number;
   currentServerTeam: 'A' | 'B';
   currentServerPlayer: string;
   currentReceiverPlayer: string;
+  // 位置追踪：记录每个队伍中谁在双数区、谁在单数区
+  teamAPositions: TeamPositions;
+  teamBPositions: TeamPositions;
   isFinished: boolean;
   winner: 'A' | 'B' | null;
 }

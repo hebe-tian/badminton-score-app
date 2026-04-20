@@ -16,7 +16,57 @@ export default function DoublesMatch({
   onRestart,
   onBack,
 }: DoublesMatchProps): ReactNode {
-  const { teamA, teamB, teamAScore, teamBScore, currentServerTeam, currentServerPlayer, currentReceiverPlayer, winner } = state;
+  const { 
+    teamA, 
+    teamB, 
+    teamAScore, 
+    teamBScore, 
+    currentServerTeam, 
+    currentServerPlayer, 
+    currentReceiverPlayer, 
+    winner,
+    teamAPositions,
+    teamBPositions
+  } = state;
+
+  // 根据球员标识符（A1/A2/B1/B2）获取显示名称
+  const getPlayerDisplayName = (playerId: string): string => {
+    switch (playerId) {
+      case 'A1':
+        return teamA.player1Name || 'A1';
+      case 'A2':
+        return teamA.player2Name || 'A2';
+      case 'B1':
+        return teamB.player1Name || 'B1';
+      case 'B2':
+        return teamB.player2Name || 'B2';
+      default:
+        return playerId;
+    }
+  };
+  
+  // 获取球员显示名称，如果是发球方或接发球方则添加标注
+  const getPlayerWithLabel = (playerId: string, team: 'A' | 'B') => {
+    const name = getPlayerDisplayName(playerId);
+    const isServer = playerId === currentServerPlayer && currentServerTeam === team;
+    const isReceiver = playerId === currentReceiverPlayer && currentServerTeam !== team;
+    
+    if (isServer) {
+      return (
+        <span className="text-green-400 font-medium">
+          {name}<span className="ml-1 text-xs">发</span>
+        </span>
+      );
+    }
+    if (isReceiver) {
+      return (
+        <span>
+          {name}<span className="ml-1 text-xs text-orange-400">接</span>
+        </span>
+      );
+    }
+    return <span>{name}</span>;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-emerald-50 flex flex-col">
@@ -29,28 +79,57 @@ export default function DoublesMatch({
 
       <div className="flex-1 flex flex-col p-4 max-w-lg mx-auto w-full">
         <div className="bg-white bg-opacity-90 rounded-3xl shadow-lg p-6 mb-4">
+          {/* 发球信息 */}
           <div className="text-center mb-4">
             <span className="text-sm text-green-400 font-medium">
-              发球方: {currentServerTeam}队 · {currentServerPlayer}
+              发球方: {currentServerTeam}队 · {getPlayerDisplayName(currentServerPlayer)}
             </span>
           </div>
 
+          {/* 场地布局：A队左双右单，B队左单右双（面对面站位） */}
+          <div className="space-y-4 mb-6">
+            {/* A队行：左侧双数区，右侧单数区 */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <div className="text-xs text-gray-500 mb-2 text-center">A队</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-xs text-gray-400 mb-1">双数区</div>
+                  <div className="text-sm font-medium">
+                    {getPlayerWithLabel(teamAPositions.evenCourtPlayer, 'A')}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-400 mb-1">单数区</div>
+                  <div className="text-sm font-medium">
+                    {getPlayerWithLabel(teamAPositions.oddCourtPlayer, 'A')}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* B队行：左侧单数区，右侧双数区（与A队相反） */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <div className="text-xs text-gray-500 mb-2 text-center">B队</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-xs text-gray-400 mb-1">单数区</div>
+                  <div className="text-sm font-medium">
+                    {getPlayerWithLabel(teamBPositions.oddCourtPlayer, 'B')}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-400 mb-1">双数区</div>
+                  <div className="text-sm font-medium">
+                    {getPlayerWithLabel(teamBPositions.evenCourtPlayer, 'B')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 比分和得分按钮 */}
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="text-center flex-1">
-              <div className="text-sm font-medium mb-1 text-gray-600">A队</div>
-              <div className="text-xs text-gray-500 mb-2">
-                {currentServerTeam === 'A' ? (
-                  <>
-                    <span className="text-green-400">{currentServerPlayer}</span>
-                    <span className="ml-1">发</span> · {currentReceiverPlayer}
-                    <span className="ml-1">接</span>
-                  </>
-                ) : (
-                  <>
-                    {teamA.player1Name} / {teamA.player2Name}
-                  </>
-                )}
-              </div>
               <div className="text-5xl font-bold text-gray-800 mb-3">{teamAScore}</div>
               <button
                 onClick={() => onScore('A')}
@@ -64,20 +143,6 @@ export default function DoublesMatch({
             <div className="text-3xl font-bold text-gray-300">:</div>
 
             <div className="text-center flex-1">
-              <div className="text-sm font-medium mb-1 text-gray-600">B队</div>
-              <div className="text-xs text-gray-500 mb-2">
-                {currentServerTeam === 'B' ? (
-                  <>
-                    <span className="text-green-400">{currentServerPlayer}</span>
-                    <span className="ml-1">发</span> · {currentReceiverPlayer}
-                    <span className="ml-1">接</span>
-                  </>
-                ) : (
-                  <>
-                    {teamB.player1Name} / {teamB.player2Name}
-                  </>
-                )}
-              </div>
               <div className="text-5xl font-bold text-gray-800 mb-3">{teamBScore}</div>
               <button
                 onClick={() => onScore('B')}

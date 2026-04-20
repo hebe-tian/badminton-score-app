@@ -108,13 +108,52 @@ function App() {
   };
 
   const handleDoublesStart = () => {
+    // 根据发球球员标识符自动推断发球队（A1/A2属于A队，B1/B2属于B队）
+    const firstServerTeam = doublesConfig.firstServerPlayer?.startsWith('A') ? 'A' : 'B';
+    
+    // 根据首发球员设置初始位置
+    // 规则：发球球员和接发球球员都在各自队伍的双数区
+    // A队布局：左侧双数区，右侧单数区
+    // B队布局：左侧单数区，右侧双数区（与A队相反）
+    const serverPlayer = doublesConfig.firstServerPlayer;
+    const receiverPlayer = doublesConfig.firstReceiverPlayer;
+    
+    let teamAPositions: { evenCourtPlayer: string; oddCourtPlayer: string };
+    let teamBPositions: { evenCourtPlayer: string; oddCourtPlayer: string };
+    
+    if (firstServerTeam === 'A') {
+      // A队发球：发球球员在双数区，队友在单数区
+      teamAPositions = {
+        evenCourtPlayer: serverPlayer,
+        oddCourtPlayer: serverPlayer === 'A1' ? 'A2' : 'A1',
+      };
+      // B队接发球：接发球球员在双数区，队友在单数区
+      teamBPositions = {
+        evenCourtPlayer: receiverPlayer,
+        oddCourtPlayer: receiverPlayer === 'B1' ? 'B2' : 'B1',
+      };
+    } else {
+      // B队发球：发球球员在双数区，队友在单数区
+      teamBPositions = {
+        evenCourtPlayer: serverPlayer,
+        oddCourtPlayer: serverPlayer === 'B1' ? 'B2' : 'B1',
+      };
+      // A队接发球：接发球球员在双数区，队友在单数区
+      teamAPositions = {
+        evenCourtPlayer: receiverPlayer,
+        oddCourtPlayer: receiverPlayer === 'A1' ? 'A2' : 'A1',
+      };
+    }
+    
     setDoublesState({
       ...doublesConfig,
       teamAScore: 0,
       teamBScore: 0,
-      currentServerTeam: doublesConfig.firstServerTeam,
+      currentServerTeam: firstServerTeam,
       currentServerPlayer: doublesConfig.firstServerPlayer,
       currentReceiverPlayer: doublesConfig.firstReceiverPlayer,
+      teamAPositions,
+      teamBPositions,
       isFinished: false,
       winner: null,
     });
@@ -124,22 +163,22 @@ function App() {
 
   const handleDoublesScore = (scoringTeam: 'A' | 'B') => {
     if (!doublesState) return;
+    
+    // 先加分
     const newState = { ...doublesState };
     if (scoringTeam === 'A') newState.teamAScore += 1;
     else newState.teamBScore += 1;
 
-    const nextServer = getNextDoublesServer(
-      newState.currentServerTeam,
-      newState.currentServerPlayer,
-      newState.currentReceiverPlayer,
-      scoringTeam,
-      newState.teamA,
-      newState.teamB
-    );
+    // 计算下一个发球状态（包含位置更新）
+    const nextServer = getNextDoublesServer(newState, scoringTeam);
+    
     newState.currentServerTeam = nextServer.serverTeam;
     newState.currentServerPlayer = nextServer.serverPlayer;
     newState.currentReceiverPlayer = nextServer.receiverPlayer;
+    newState.teamAPositions = nextServer.teamAPositions;
+    newState.teamBPositions = nextServer.teamBPositions;
 
+    // 检查比赛是否结束
     const result = isMatchFinished(newState.teamAScore, newState.teamBScore, newState.matchPoint, newState.extendMatch);
     if (result.finished) {
       newState.isFinished = true;
@@ -211,13 +250,44 @@ function App() {
       });
       setSinglesHistory({ entries: [], matchMode: 'singles' });
     } else if (view === 'doubles-match') {
+      const firstServerTeam = doublesConfig.firstServerPlayer?.startsWith('A') ? 'A' : 'B';
+      
+      // 重新计算初始位置（与 handleDoublesStart 相同逻辑）
+      const serverPlayer = doublesConfig.firstServerPlayer;
+      const receiverPlayer = doublesConfig.firstReceiverPlayer;
+      
+      let teamAPositions: { evenCourtPlayer: string; oddCourtPlayer: string };
+      let teamBPositions: { evenCourtPlayer: string; oddCourtPlayer: string };
+      
+      if (firstServerTeam === 'A') {
+        teamAPositions = {
+          evenCourtPlayer: serverPlayer,
+          oddCourtPlayer: serverPlayer === 'A1' ? 'A2' : 'A1',
+        };
+        teamBPositions = {
+          evenCourtPlayer: receiverPlayer,
+          oddCourtPlayer: receiverPlayer === 'B1' ? 'B2' : 'B1',
+        };
+      } else {
+        teamBPositions = {
+          evenCourtPlayer: serverPlayer,
+          oddCourtPlayer: serverPlayer === 'B1' ? 'B2' : 'B1',
+        };
+        teamAPositions = {
+          evenCourtPlayer: receiverPlayer,
+          oddCourtPlayer: receiverPlayer === 'A1' ? 'A2' : 'A1',
+        };
+      }
+      
       setDoublesState({
         ...doublesConfig,
         teamAScore: 0,
         teamBScore: 0,
-        currentServerTeam: doublesConfig.firstServerTeam,
+        currentServerTeam: firstServerTeam,
         currentServerPlayer: doublesConfig.firstServerPlayer,
         currentReceiverPlayer: doublesConfig.firstReceiverPlayer,
+        teamAPositions,
+        teamBPositions,
         isFinished: false,
         winner: null,
       });

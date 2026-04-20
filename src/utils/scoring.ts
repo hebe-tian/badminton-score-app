@@ -1,5 +1,6 @@
 import type {
-  DoublesTeam,
+  DoublesMatchState,
+  TeamPositions,
   WuYunLunBiTeam,
   ScoreHistoryEntry
 } from '../types';
@@ -40,36 +41,128 @@ export function isWuYunLunBiMatchFinished(
 }
 
 export function getNextSinglesServer(
-  currentServer: 1 | 2,
+  _currentServer: 1 | 2,
   scoringPlayer: 1 | 2
 ): 1 | 2 {
   return scoringPlayer;
 }
 
+/**
+ * 根据发球球员确定接发球球员
+ * 规则3：A队单数区发球 → B队单数区接发；A队双数区发球 → B队双数区接发
+ */
+function getReceiverByServer(
+  serverPlayer: string,
+  serverTeam: 'A' | 'B',
+  teamAPositions: TeamPositions,
+  teamBPositions: TeamPositions
+): string {
+  // 确定发球球员在哪个区域
+  const isServerInEvenCourt = teamAPositions.evenCourtPlayer === serverPlayer || 
+                               teamBPositions.evenCourtPlayer === serverPlayer;
+  
+  // 接发球方是另一方
+  const receiverTeamPositions = serverTeam === 'A' ? teamBPositions : teamAPositions;
+  
+  // 一一对应：双数区对双数区，单数区对单数区
+  return isServerInEvenCourt 
+    ? receiverTeamPositions.evenCourtPlayer 
+    : receiverTeamPositions.oddCourtPlayer;
+}
+
+/**
+ * 双打发球轮换逻辑（完全按照设计文档实现）
+ * 
+ * 规则1 - 发球方得分：
+ *   - 加分
+ *   - 发球方两人交换位置（单数区↔双数区）
+ *   - 同一人继续发球
+ *   - 接发球方位置不变
+ * 
+ * 规则2 - 发球方失分：
+ *   - 加分
+ *   - 双方位置都不变
+ *   - 转换发球权
+ *   - 新发球方按分数单双选择发球人（单数→单数区球员，双数→双数区球员）
+ * 
+ * 规则3 - 接发球确定：
+ *   - A队单数区发球 → B队单数区接发
+ *   - A队双数区发球 → B队双数区接发
+ */
 export function getNextDoublesServer(
-  currentServerTeam: 'A' | 'B',
-  currentServerPlayer: string,
-  currentReceiverPlayer: string,
-  scoringTeam: 'A' | 'B',
-  teamA: DoublesTeam,
-  teamB: DoublesTeam
-): { serverTeam: 'A' | 'B'; serverPlayer: string; receiverPlayer: string } {
-  const nextServerTeam = scoringTeam;
-  const scoringTeamData = scoringTeam === 'A' ? teamA : teamB;
-  const otherTeam = scoringTeam === 'A' ? teamB : teamA;
-
-  const nextServerPlayer = currentServerPlayer === scoringTeamData.player1Name
-    ? scoringTeamData.player2Name
-    : scoringTeamData.player1Name;
-
-  const nextReceiverPlayer = currentReceiverPlayer === otherTeam.player1Name
-    ? otherTeam.player2Name
-    : otherTeam.player1Name;
-
+  currentState: DoublesMatchState,
+  scoringTeam: 'A' | 'B'
+): {
+  serverTeam: 'A' | 'B';
+  serverPlayer: string;
+  receiverPlayer: string;
+  teamAPositions: TeamPositions;
+  teamBPositions: TeamPositions;
+} {
+  const { currentServerTeam, currentServerPlayer, teamAPositions, teamBPositions } = currentState;
+  const isScorer = currentServerTeam === scoringTeam;
+  
+  let newTeamAPositions = { ...teamAPositions };
+  let newTeamBPositions = { ...teamBPositions };
+  let nextServerTeam: 'A' | 'B';
+  let nextServerPlayer: string;
+  let nextReceiverPlayer: string;
+  
+  if (isScorer) {
+    // 规则1：发球方得分
+    // 发球方交换位置，同一人继续发球
+    nextServerTeam = currentServerTeam;
+    nextServerPlayer = currentServerPlayer;
+    
+    // 发球方交换位置
+    if (currentServerTeam === 'A') {
+      newTeamAPositions = {
+        evenCourtPlayer: teamAPositions.oddCourtPlayer,
+        oddCourtPlayer: teamAPositions.evenCourtPlayer,
+      };
+      // 接发球方（B队）位置不变
+      newTeamBPositions = teamBPositions;
+    } else {
+      newTeamBPositions = {
+        evenCourtPlayer: teamBPositions.oddCourtPlayer,
+        oddCourtPlayer: teamBPositions.evenCourtPlayer,
+      };
+      // 接发球方（A队）位置不变
+      newTeamAPositions = teamAPositions;
+    }
+    
+    // 根据新的位置确定接发球球员
+    nextReceiverPlayer = getReceiverByServer(nextServerPlayer, nextServerTeam, newTeamAPositions, newTeamBPositions);
+  } else {
+    // 规则2：发球方失分（接发球方得分）
+    // 双方位置不变，转换发球权
+    nextServerTeam = scoringTeam;
+    
+    // 位置都不变
+    newTeamAPositions = teamAPositions;
+    newTeamBPositions = teamBPositions;
+    
+    // 新发球方按分数单双选择发球人
+    const scoringTeamScore = scoringTeam === 'A' ? currentState.teamAScore : currentState.teamBScore;
+    const scoringTeamPositions = scoringTeam === 'A' ? teamAPositions : teamBPositions;
+    
+    // 单数分→单数区球员发球，双数分→双数区球员发球
+    if (scoringTeamScore % 2 === 1) {
+      nextServerPlayer = scoringTeamPositions.oddCourtPlayer;
+    } else {
+      nextServerPlayer = scoringTeamPositions.evenCourtPlayer;
+    }
+    
+    // 根据新发球人位置确定接发球人
+    nextReceiverPlayer = getReceiverByServer(nextServerPlayer, nextServerTeam, newTeamAPositions, newTeamBPositions);
+  }
+  
   return {
     serverTeam: nextServerTeam,
     serverPlayer: nextServerPlayer,
-    receiverPlayer: nextReceiverPlayer
+    receiverPlayer: nextReceiverPlayer,
+    teamAPositions: newTeamAPositions,
+    teamBPositions: newTeamBPositions,
   };
 }
 
@@ -103,9 +196,9 @@ export function getWuYunLunBiPlayerRotation(
   const scoreLeader = scoreA > scoreB ? 'A' : scoreB > scoreA ? 'B' : null;
   const serverTeam = scoreLeader || 'A';
 
-  const serverPlayerIndex = currentPlayerIndices[serverTeam][0];
+  const serverPlayerIndex = currentPlayerIndices[serverTeam === 'A' ? 'teamA' : 'teamB'][0];
   const receiverTeam = serverTeam === 'A' ? 'B' : 'A';
-  const receiverPlayerIndex = currentPlayerIndices[receiverTeam][0];
+  const receiverPlayerIndex = currentPlayerIndices[receiverTeam === 'A' ? 'teamA' : 'teamB'][0];
 
   return {
     currentPlayerIndices,
@@ -118,7 +211,7 @@ export function getWuYunLunBiPlayerRotation(
 export function detectRotationThreshold(
   scoreA: number,
   scoreB: number,
-  totalPoints: number
+  _totalPoints: number
 ): { isRotationPoint: boolean; benchedPlayers: { team: 'A' | 'B'; out: string; in: string }[] } {
   const maxScore = Math.max(scoreA, scoreB);
   const currentPhase = Math.floor(maxScore / 10) % 5;

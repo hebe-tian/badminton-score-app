@@ -151,51 +151,33 @@ export default function DoublesSetup({
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              首发发球队
-            </label>
-            <div className="flex gap-3">
-              <button
-                onClick={() => onConfigChange({ firstServerTeam: 'A' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all font-medium ${
-                  config.firstServerTeam === 'A'
-                    ? 'bg-green-400 text-white border-green-400 shadow-md'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-green-300'
-                }`}
-              >
-                A队
-              </button>
-              <button
-                onClick={() => onConfigChange({ firstServerTeam: 'B' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all font-medium ${
-                  config.firstServerTeam === 'B'
-                    ? 'bg-green-400 text-white border-green-400 shadow-md'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-green-300'
-                }`}
-              >
-                B队
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">
               首发发球球员
             </label>
             <select
               value={config.firstServerPlayer}
-              onChange={(e) => onConfigChange({ firstServerPlayer: e.target.value })}
+              onChange={(e) => {
+                const selectedPlayer = e.target.value;
+                // 根据选中的值判断是哪个队的球员
+                const isTeamA = selectedPlayer.startsWith('A');
+                const newReceiverPlayer = isTeamA ? 'B1' : 'A1';
+                onConfigChange({
+                  firstServerPlayer: selectedPlayer,
+                  firstReceiverPlayer: newReceiverPlayer
+                });
+              }}
               className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-300 focus:border-green-300 transition-all text-gray-800 bg-white"
             >
-              <option value={config.teamA.player1Name}>
+              <option value="">请选择发球球员</option>
+              <option value="A1">
                 A1: {config.teamA.player1Name || 'A1'}
               </option>
-              <option value={config.teamA.player2Name}>
+              <option value="A2">
                 A2: {config.teamA.player2Name || 'A2'}
               </option>
-              <option value={config.teamB.player1Name}>
+              <option value="B1">
                 B1: {config.teamB.player1Name || 'B1'}
               </option>
-              <option value={config.teamB.player2Name}>
+              <option value="B2">
                 B2: {config.teamB.player2Name || 'B2'}
               </option>
             </select>
@@ -209,20 +191,41 @@ export default function DoublesSetup({
               value={config.firstReceiverPlayer}
               onChange={(e) => onConfigChange({ firstReceiverPlayer: e.target.value })}
               className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-300 focus:border-green-300 transition-all text-gray-800 bg-white"
+              disabled={!config.firstServerPlayer}
             >
-              <option value={config.teamB.player1Name}>
-                B1: {config.teamB.player1Name || 'B1'}
-              </option>
-              <option value={config.teamB.player2Name}>
-                B2: {config.teamB.player2Name || 'B2'}
-              </option>
-              <option value={config.teamA.player1Name}>
-                A1: {config.teamA.player1Name || 'A1'}
-              </option>
-              <option value={config.teamA.player2Name}>
-                A2: {config.teamA.player2Name || 'A2'}
-              </option>
+              <option value="">请选择接发球球员</option>
+              {(() => {
+                const isTeamAServer = config.firstServerPlayer?.startsWith('A');
+                return (
+                  <>
+                    {isTeamAServer ? (
+                      <>
+                        <option value="B1">
+                          B1: {config.teamB.player1Name || 'B1'}
+                        </option>
+                        <option value="B2">
+                          B2: {config.teamB.player2Name || 'B2'}
+                        </option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="A1">
+                          A1: {config.teamA.player1Name || 'A1'}
+                        </option>
+                        <option value="A2">
+                          A2: {config.teamA.player2Name || 'A2'}
+                        </option>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </select>
+            {config.firstServerPlayer && (
+              <p className="text-xs text-gray-500 mt-2">
+                已选择 {config.firstServerPlayer} 发球，请选择对方球队球员接发球
+              </p>
+            )}
           </div>
         </div>
 
