@@ -32,8 +32,8 @@ function App() {
     mode: 'singles',
     matchPoint: 21,
     extendMatch: false,
-    player1Name: '',
-    player2Name: '',
+    player1Name: 'A',
+    player2Name: 'B',
     firstServer: 1,
   });
 

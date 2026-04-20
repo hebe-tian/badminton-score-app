@@ -32,26 +32,26 @@ export default function SinglesSetup({
         <div className="bg-white bg-opacity-90 rounded-3xl shadow-lg p-6 space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              选手1名称
+              A名称
             </label>
             <input
               type="text"
               value={config.player1Name}
               onChange={(e) => onConfigChange({ player1Name: e.target.value })}
-              placeholder="选手1"
+              placeholder="A"
               className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-300 focus:border-blue-300 transition-all text-gray-800 bg-white"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              选手2名称
+              B名称
             </label>
             <input
               type="text"
               value={config.player2Name}
               onChange={(e) => onConfigChange({ player2Name: e.target.value })}
-              placeholder="选手2"
+              placeholder="B"
               className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-300 focus:border-blue-300 transition-all text-gray-800 bg-white"
             />
           </div>
@@ -124,7 +124,7 @@ export default function SinglesSetup({
                     : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
                 }`}
               >
-                {config.player1Name || '选手1'}
+                {config.player1Name || 'A'}
               </button>
               <button
                 onClick={() => onConfigChange({ firstServer: 2 })}
@@ -134,7 +134,7 @@ export default function SinglesSetup({
                     : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
                 }`}
               >
-                {config.player2Name || '选手2'}
+                {config.player2Name || 'B'}
               </button>
             </div>
           </div>
