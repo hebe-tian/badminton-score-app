@@ -95,7 +95,14 @@ export default function WuYunLunBiMatch({
       <div className="flex-1 flex flex-col p-4 max-w-lg mx-auto w-full">
         {/* Court Visualization */}
         <div className="bg-white bg-opacity-90 rounded-3xl shadow-lg p-4 mb-4">
-          <div className="grid grid-cols-2 gap-2 text-center">
+          {/* 发球信息 */}
+          <div className="text-center mb-4">
+            <span className="text-sm text-pink-500 font-medium">
+              发球方: {currentServerPlayer}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-2 gap-y-4 text-center">
             {/* Team A Courts */}
             <div className={`p-3 rounded-xl border-2 ${teamACourtPositions.evenCourtPlayer === currentServerPlayer ? 'border-pink-400 bg-pink-50' : teamACourtPositions.evenCourtPlayer === currentReceiverPlayer ? 'border-blue-400 bg-blue-50' : 'border-gray-100'}`}>
               <div className="text-xs text-gray-500 mb-1">A双数区</div>

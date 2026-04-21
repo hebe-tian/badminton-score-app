@@ -53,19 +53,33 @@ export default function DoublesMatch({
     
     if (isServer) {
       return (
-        <span className="text-green-400 font-medium">
+        <span className="text-green-600 font-bold">
           {name}<span className="ml-1 text-xs">发</span>
         </span>
       );
     }
     if (isReceiver) {
       return (
-        <span>
-          {name}<span className="ml-1 text-xs text-orange-400">接</span>
+        <span className="text-blue-600 font-bold">
+          {name}<span className="ml-1 text-xs">接</span>
         </span>
       );
     }
-    return <span>{name}</span>;
+    return <span className="text-gray-800">{name}</span>;
+  };
+
+  // 判断球员是否为发球方或接发球方，返回相应的样式类
+  const getCourtBoxClass = (playerId: string, team: 'A' | 'B') => {
+    const isServer = playerId === currentServerPlayer && currentServerTeam === team;
+    const isReceiver = playerId === currentReceiverPlayer && currentServerTeam !== team;
+    
+    if (isServer) {
+      return 'p-3 rounded-xl border-2 border-green-400 bg-green-50 shadow-md shadow-green-200';
+    }
+    if (isReceiver) {
+      return 'p-3 rounded-xl border-2 border-blue-400 bg-blue-50 shadow-md shadow-blue-200';
+    }
+    return 'p-3 rounded-xl border-2 border-gray-100';
   };
 
   return (
@@ -82,47 +96,41 @@ export default function DoublesMatch({
           {/* 发球信息 */}
           <div className="text-center mb-4">
             <span className="text-sm text-green-400 font-medium">
-              发球方: {currentServerTeam}队 · {getPlayerDisplayName(currentServerPlayer)}
+              发球方: {getPlayerDisplayName(currentServerPlayer)}
             </span>
           </div>
 
           {/* 场地布局：A队左双右单，B队左单右双（面对面站位） */}
-          <div className="space-y-4 mb-6">
-            {/* A队行：左侧双数区，右侧单数区 */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <div className="text-xs text-gray-500 mb-2 text-center">A队</div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">双数区</div>
-                  <div className="text-sm font-medium">
-                    {getPlayerWithLabel(teamAPositions.evenCourtPlayer, 'A')}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">单数区</div>
-                  <div className="text-sm font-medium">
-                    {getPlayerWithLabel(teamAPositions.oddCourtPlayer, 'A')}
-                  </div>
-                </div>
+          <div className="grid grid-cols-2 gap-x-2 gap-y-4 text-center mb-6">
+            {/* A队双数区 */}
+            <div className={getCourtBoxClass(teamAPositions.evenCourtPlayer, 'A')}>
+              <div className="text-xs text-gray-500 mb-1">A双数区</div>
+              <div className="font-bold">
+                {getPlayerWithLabel(teamAPositions.evenCourtPlayer, 'A')}
               </div>
             </div>
 
-            {/* B队行：左侧单数区，右侧双数区（与A队相反） */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <div className="text-xs text-gray-500 mb-2 text-center">B队</div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">单数区</div>
-                  <div className="text-sm font-medium">
-                    {getPlayerWithLabel(teamBPositions.oddCourtPlayer, 'B')}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">双数区</div>
-                  <div className="text-sm font-medium">
-                    {getPlayerWithLabel(teamBPositions.evenCourtPlayer, 'B')}
-                  </div>
-                </div>
+            {/* A队单数区 */}
+            <div className={getCourtBoxClass(teamAPositions.oddCourtPlayer, 'A')}>
+              <div className="text-xs text-gray-500 mb-1">A单数区</div>
+              <div className="font-bold">
+                {getPlayerWithLabel(teamAPositions.oddCourtPlayer, 'A')}
+              </div>
+            </div>
+
+            {/* B队单数区 */}
+            <div className={getCourtBoxClass(teamBPositions.oddCourtPlayer, 'B')}>
+              <div className="text-xs text-gray-500 mb-1">B单数区</div>
+              <div className="font-bold">
+                {getPlayerWithLabel(teamBPositions.oddCourtPlayer, 'B')}
+              </div>
+            </div>
+
+            {/* B队双数区 */}
+            <div className={getCourtBoxClass(teamBPositions.evenCourtPlayer, 'B')}>
+              <div className="text-xs text-gray-500 mb-1">B双数区</div>
+              <div className="font-bold">
+                {getPlayerWithLabel(teamBPositions.evenCourtPlayer, 'B')}
               </div>
             </div>
           </div>
