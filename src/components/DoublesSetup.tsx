@@ -151,7 +151,7 @@ export default function DoublesSetup({
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              首发发球球员
+              发球球员
             </label>
             <select
               value={config.firstServerPlayer}
@@ -185,7 +185,7 @@ export default function DoublesSetup({
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              首发接发球球员
+              接发球球员
             </label>
             <select
               value={config.firstReceiverPlayer}
