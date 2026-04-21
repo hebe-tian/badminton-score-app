@@ -14,13 +14,16 @@ import type {
   WuYunLunBiMatchConfig,
   WuYunLunBiMatchState,
   ScoreHistory,
+  RotationInfo,
 } from './types';
 import {
   isMatchFinished,
   isWuYunLunBiMatchFinished,
   getNextSinglesServer,
   getNextDoublesServer,
-  getWuYunLunBiPlayerRotation,
+  handleWuYunServerScores,
+  handleWuYunReceiverScores,
+  applyWuYunRotation,
 } from './utils/scoring';
 
 type AppView = 'mode-select' | 'singles-setup' | 'singles-match' | 'doubles-setup' | 'doubles-match' | 'wu-yun-lun-bi-setup' | 'wu-yun-lun-bi-match';
@@ -193,15 +196,48 @@ function App() {
   };
 
   const handleWuYunLunBiStart = () => {
-    const rotation = getWuYunLunBiPlayerRotation(0, 0, wuYunLunBiConfig.teamA, wuYunLunBiConfig.teamB);
+    const serverPlayer = wuYunLunBiConfig.firstServerPlayer;
+    const receiverPlayer = wuYunLunBiConfig.firstReceiverPlayer;
+    
+    // Determine server team from the selected player
+    const isServerTeamA = serverPlayer === wuYunLunBiConfig.teamA.players[0] || serverPlayer === wuYunLunBiConfig.teamA.players[1];
+    const serverTeam = isServerTeamA ? 'A' : 'B';
+
+    // Initial positions: Server and Receiver in Even courts, their partners in Odd courts
+    const initialTeamACourts = {
+      evenCourtPlayer: isServerTeamA ? serverPlayer : receiverPlayer,
+      oddCourtPlayer: isServerTeamA 
+        ? (serverPlayer === wuYunLunBiConfig.teamA.players[0] ? wuYunLunBiConfig.teamA.players[1] : wuYunLunBiConfig.teamA.players[0])
+        : (receiverPlayer === wuYunLunBiConfig.teamA.players[0] ? wuYunLunBiConfig.teamA.players[1] : wuYunLunBiConfig.teamA.players[0]),
+    };
+
+    const initialTeamBCourts = {
+      evenCourtPlayer: !isServerTeamA ? serverPlayer : receiverPlayer,
+      oddCourtPlayer: !isServerTeamA
+        ? (serverPlayer === wuYunLunBiConfig.teamB.players[0] ? wuYunLunBiConfig.teamB.players[1] : wuYunLunBiConfig.teamB.players[0])
+        : (receiverPlayer === wuYunLunBiConfig.teamB.players[0] ? wuYunLunBiConfig.teamB.players[1] : wuYunLunBiConfig.teamB.players[0]),
+    };
+
+    // Initial indices based on names
+    const getIdx = (team: 'A' | 'B', name: string) => {
+      const players = team === 'A' ? wuYunLunBiConfig.teamA.players : wuYunLunBiConfig.teamB.players;
+      return players.indexOf(name);
+    };
+
     setWuYunLunBiState({
       ...wuYunLunBiConfig,
       teamAScore: 0,
       teamBScore: 0,
-      currentServerTeam: wuYunLunBiConfig.firstServerTeam,
-      currentServerPlayer: wuYunLunBiConfig.firstServerPlayer,
-      currentReceiverPlayer: wuYunLunBiConfig.firstReceiverPlayer,
-      currentPlayerIndices: rotation.currentPlayerIndices,
+      currentServerTeam: serverTeam,
+      currentServerPlayer: serverPlayer,
+      currentReceiverPlayer: receiverPlayer,
+      teamACourtPositions: initialTeamACourts,
+      teamBCourtPositions: initialTeamBCourts,
+      currentPlayerIndices: {
+        teamA: [getIdx('A', initialTeamACourts.evenCourtPlayer), getIdx('A', initialTeamACourts.oddCourtPlayer)],
+        teamB: [getIdx('B', initialTeamBCourts.evenCourtPlayer), getIdx('B', initialTeamBCourts.oddCourtPlayer)],
+      },
+      lastRotationScore: 0,
       isFinished: false,
       winner: null,
     });
@@ -211,16 +247,16 @@ function App() {
 
   const handleWuYunLunBiScore = (scoringTeam: 'A' | 'B') => {
     if (!wuYunLunBiState) return;
-    const newState = { ...wuYunLunBiState };
-    if (scoringTeam === 'A') newState.teamAScore += 1;
-    else newState.teamBScore += 1;
+    
+    // 1. Handle Scoring Logic
+    let newState: WuYunLunBiMatchState;
+    if (scoringTeam === wuYunLunBiState.currentServerTeam) {
+      newState = handleWuYunServerScores(wuYunLunBiState);
+    } else {
+      newState = handleWuYunReceiverScores(wuYunLunBiState);
+    }
 
-    const rotation = getWuYunLunBiPlayerRotation(newState.teamAScore, newState.teamBScore, newState.teamA, newState.teamB);
-    newState.currentServerTeam = rotation.nextServerTeam;
-    newState.currentServerPlayer = rotation.nextServerPlayer;
-    newState.currentReceiverPlayer = rotation.nextReceiverPlayer;
-    newState.currentPlayerIndices = rotation.currentPlayerIndices;
-
+    // 2. Check for Match End
     const result = isWuYunLunBiMatchFinished(newState.teamAScore, newState.teamBScore, newState.totalPoints);
     if (result.finished) {
       newState.isFinished = true;
@@ -231,6 +267,12 @@ function App() {
       };
     }
 
+    setWuYunLunBiState(newState);
+  };
+
+  const handleWuYunLunBiRotationConfirm = (info: RotationInfo) => {
+    if (!wuYunLunBiState) return;
+    const newState = applyWuYunRotation(wuYunLunBiState, info);
     setWuYunLunBiState(newState);
   };
 
@@ -293,19 +335,7 @@ function App() {
       });
       setDoublesHistory({ entries: [], matchMode: 'doubles' });
     } else if (view === 'wu-yun-lun-bi-match') {
-      const rotation = getWuYunLunBiPlayerRotation(0, 0, wuYunLunBiConfig.teamA, wuYunLunBiConfig.teamB);
-      setWuYunLunBiState({
-        ...wuYunLunBiConfig,
-        teamAScore: 0,
-        teamBScore: 0,
-        currentServerTeam: wuYunLunBiConfig.firstServerTeam,
-        currentServerPlayer: wuYunLunBiConfig.firstServerPlayer,
-        currentReceiverPlayer: wuYunLunBiConfig.firstReceiverPlayer,
-        currentPlayerIndices: rotation.currentPlayerIndices,
-        isFinished: false,
-        winner: null,
-      });
-      setWuYunLunBiHistory({ entries: [], matchMode: 'wu-yun-lun-bi' });
+      handleWuYunLunBiStart();
     }
   };
 
@@ -365,8 +395,8 @@ function App() {
       {view === 'wu-yun-lun-bi-match' && wuYunLunBiState && (
         <WuYunLunBiMatch
           state={wuYunLunBiState}
-          scoreHistory={wuYunLunBiHistory}
           onScore={handleWuYunLunBiScore}
+          onConfirmRotation={handleWuYunLunBiRotationConfirm}
           onRestart={handleRestart}
           onBack={handleBack}
         />

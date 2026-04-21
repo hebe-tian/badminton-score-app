@@ -68,16 +68,37 @@ export interface WuYunLunBiMatchConfig {
   firstReceiverPlayer: string;
 }
 
+// 五羽伦比场地位置追踪
+export interface CourtPositions {
+  evenCourtPlayer: string;   // 双数区球员名称
+  oddCourtPlayer: string;    // 单数区球员名称
+}
+
+export interface RotationInfo {
+  isRotationPoint: boolean;
+  benchedPlayers: Array<{
+    team: 'A' | 'B';
+    out: string;
+    in: string;
+  }>;
+}
+
 export interface WuYunLunBiMatchState extends WuYunLunBiMatchConfig {
   teamAScore: number;
   teamBScore: number;
   currentServerTeam: 'A' | 'B';
   currentServerPlayer: string;
   currentReceiverPlayer: string;
+  // 新增：场地位置追踪
+  teamACourtPositions: CourtPositions;
+  teamBCourtPositions: CourtPositions;
+  // 保留：当前场上球员索引（用于显示）
   currentPlayerIndices: {
     teamA: [number, number];
     teamB: [number, number];
   };
+  // 新增：记录上一次换人的最高分，防止重复弹窗
+  lastRotationScore: number;
   isFinished: boolean;
   winner: 'A' | 'B' | null;
 }

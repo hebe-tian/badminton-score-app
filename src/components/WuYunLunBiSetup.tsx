@@ -81,46 +81,23 @@ export default function WuYunLunBiSetup({
         <div className="bg-white bg-opacity-90 rounded-3xl shadow-lg p-6 space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              首发发球队
-            </label>
-            <div className="flex gap-3">
-              <button
-                onClick={() => onConfigChange({ firstServerTeam: 'A' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all font-medium ${
-                  config.firstServerTeam === 'A'
-                    ? 'bg-pink-400 text-white border-pink-400 shadow-md'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-pink-300'
-                }`}
-              >
-                A队
-              </button>
-              <button
-                onClick={() => onConfigChange({ firstServerTeam: 'B' })}
-                className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all font-medium ${
-                  config.firstServerTeam === 'B'
-                    ? 'bg-pink-400 text-white border-pink-400 shadow-md'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-pink-300'
-                }`}
-              >
-                B队
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">
-              首发发球球员
+              首发发球球员 (仅限 A1/A2/B1/B2)
             </label>
             <select
               value={config.firstServerPlayer}
-              onChange={(e) => onConfigChange({ firstServerPlayer: e.target.value })}
+              onChange={(e) => {
+                const server = e.target.value;
+                // Auto-clear receiver when server changes (Scheme A)
+                onConfigChange({ firstServerPlayer: server, firstReceiverPlayer: '' });
+              }}
               className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white"
             >
-              {teamA.players.map((name, i) => (
-                <option key={`A${i}`} value={name}>A{i + 1}: {name}</option>
+              <option value="" disabled>请选择发球球员</option>
+              {[0, 1].map((i) => (
+                <option key={`A${i}`} value={teamA.players[i]}>A{i + 1}: {teamA.players[i]}</option>
               ))}
-              {teamB.players.map((name, i) => (
-                <option key={`B${i}`} value={name}>B{i + 1}: {name}</option>
+              {[0, 1].map((i) => (
+                <option key={`B${i}`} value={teamB.players[i]}>B{i + 1}: {teamB.players[i]}</option>
               ))}
             </select>
           </div>
@@ -132,14 +109,18 @@ export default function WuYunLunBiSetup({
             <select
               value={config.firstReceiverPlayer}
               onChange={(e) => onConfigChange({ firstReceiverPlayer: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white"
+              disabled={!config.firstServerPlayer}
+              className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white disabled:bg-gray-100 disabled:text-gray-400"
             >
-              {teamB.players.map((name, i) => (
-                <option key={`B${i}`} value={name}>B{i + 1}: {name}</option>
-              ))}
-              {teamA.players.map((name, i) => (
-                <option key={`A${i}`} value={name}>A{i + 1}: {name}</option>
-              ))}
+              <option value="" disabled>请先选择发球球员</option>
+              {config.firstServerPlayer && (() => {
+                const isTeamA = config.firstServerPlayer === teamA.players[0] || config.firstServerPlayer === teamA.players[1];
+                const targetTeam = isTeamA ? teamB : teamA;
+                const prefix = isTeamA ? 'B' : 'A';
+                return [0, 1].map((i) => (
+                  <option key={`${prefix}${i}`} value={targetTeam.players[i]}>{prefix}{i + 1}: {targetTeam.players[i]}</option>
+                ));
+              })()}
             </select>
           </div>
 

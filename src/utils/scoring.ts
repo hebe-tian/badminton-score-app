@@ -2,12 +2,23 @@ import type {
   DoublesMatchState,
   TeamPositions,
   WuYunLunBiTeam,
+  WuYunLunBiMatchState,
+  CourtPositions,
   ScoreHistoryEntry
 } from '../types';
 
 export interface MatchFinishedResult {
   finished: boolean;
   winner: 'A' | 'B' | '1' | '2' | null;
+}
+
+export interface RotationInfo {
+  isRotationPoint: boolean;
+  benchedPlayers: Array<{
+    team: 'A' | 'B';
+    out: string;
+    in: string;
+  }>;
 }
 
 export function isMatchFinished(
@@ -47,6 +58,212 @@ export function getNextSinglesServer(
   return scoringPlayer;
 }
 
+// --- Helper Functions for Court Positioning ---
+
+function swapCourts(positions: CourtPositions): CourtPositions {
+  return {
+    evenCourtPlayer: positions.oddCourtPlayer,
+    oddCourtPlayer: positions.evenCourtPlayer,
+  };
+}
+
+function getReceiverByServerForWuYun(
+  serverPlayer: string,
+  serverTeam: 'A' | 'B',
+  teamACourts: CourtPositions,
+  teamBCourts: CourtPositions
+): string {
+  const serverCourts = serverTeam === 'A' ? teamACourts : teamBCourts;
+  const isServerInEvenCourt = serverCourts.evenCourtPlayer === serverPlayer;
+  
+  const receiverCourts = serverTeam === 'A' ? teamBCourts : teamACourts;
+  
+  return isServerInEvenCourt
+    ? receiverCourts.evenCourtPlayer
+    : receiverCourts.oddCourtPlayer;
+}
+
+// --- WuYunLunBi Scoring Logic ---
+
+export function handleWuYunServerScores(state: WuYunLunBiMatchState): WuYunLunBiMatchState {
+  const scoringTeam = state.currentServerTeam;
+  const newScore = scoringTeam === 'A' ? state.teamAScore + 1 : state.teamBScore + 1;
+  
+  let newTeamACourts = state.teamACourtPositions;
+  let newTeamBCourts = state.teamBCourtPositions;
+
+  // 1. Server team swaps courts
+  if (scoringTeam === 'A') {
+    newTeamACourts = swapCourts(state.teamACourtPositions);
+  } else {
+    newTeamBCourts = swapCourts(state.teamBCourtPositions);
+  }
+
+  // 2. Same server continues, determine new receiver
+  const nextReceiver = getReceiverByServerForWuYun(
+    state.currentServerPlayer,
+    scoringTeam,
+    newTeamACourts,
+    newTeamBCourts
+  );
+
+  return {
+    ...state,
+    teamAScore: scoringTeam === 'A' ? newScore : state.teamAScore,
+    teamBScore: scoringTeam === 'B' ? newScore : state.teamBScore,
+    teamACourtPositions: newTeamACourts,
+    teamBCourtPositions: newTeamBCourts,
+    currentReceiverPlayer: nextReceiver,
+  };
+}
+
+export function handleWuYunReceiverScores(state: WuYunLunBiMatchState): WuYunLunBiMatchState {
+  const receivingTeam = state.currentServerTeam === 'A' ? 'B' : 'A';
+  const newScore = receivingTeam === 'A' ? state.teamAScore + 1 : state.teamBScore + 1;
+  
+  // 1. Positions stay the same
+  // 2. Serve transfers to receiving team
+  // 3. New server based on parity of new score
+  const scoringTeamPositions = receivingTeam === 'A' ? state.teamACourtPositions : state.teamBCourtPositions;
+  
+  const nextServerPlayer = newScore % 2 === 1
+    ? scoringTeamPositions.oddCourtPlayer
+    : scoringTeamPositions.evenCourtPlayer;
+
+  const nextReceiver = getReceiverByServerForWuYun(
+    nextServerPlayer,
+    receivingTeam,
+    state.teamACourtPositions,
+    state.teamBCourtPositions
+  );
+
+  return {
+    ...state,
+    teamAScore: receivingTeam === 'A' ? newScore : state.teamAScore,
+    teamBScore: receivingTeam === 'B' ? newScore : state.teamBScore,
+    currentServerTeam: receivingTeam,
+    currentServerPlayer: nextServerPlayer,
+    currentReceiverPlayer: nextReceiver,
+  };
+}
+
+export function applyWuYunRotation(
+  state: WuYunLunBiMatchState,
+  rotationInfo: RotationInfo
+): WuYunLunBiMatchState {
+  const aRotation = rotationInfo.benchedPlayers.find(p => p.team === 'A');
+  const bRotation = rotationInfo.benchedPlayers.find(p => p.team === 'B');
+
+  // Helper function to calculate new indices with proper court positioning
+  // Rule: New player goes to even court, remaining player goes to odd court
+  const getNewIndicesWithCourtPositioning = (
+    currentIndices: [number, number], 
+    teamPlayers: string[], 
+    outName: string, 
+    inName: string
+  ): [number, number] => {
+    const outIndex = currentIndices.findIndex(idx => teamPlayers[idx] === outName);
+    const inIndex = teamPlayers.indexOf(inName);
+    
+    if (outIndex === -1 || inIndex === -1) return currentIndices; // Fallback
+
+    // Find the remaining player (the one not going out)
+    const remainingIndex = currentIndices.find(idx => teamPlayers[idx] !== outName);
+    if (remainingIndex === undefined) return currentIndices;
+
+    // New player goes to even court (index 0), remaining player goes to odd court (index 1)
+    return [inIndex, remainingIndex];
+  };
+
+  let newTeamAIndices = state.currentPlayerIndices.teamA;
+  let newTeamBIndices = state.currentPlayerIndices.teamB;
+
+  if (aRotation) {
+    newTeamAIndices = getNewIndicesWithCourtPositioning(newTeamAIndices, state.teamA.players, aRotation.out, aRotation.in);
+  }
+  if (bRotation) {
+    newTeamBIndices = getNewIndicesWithCourtPositioning(newTeamBIndices, state.teamB.players, bRotation.out, bRotation.in);
+  }
+
+  // Reset positions: New players -> Even, Remaining -> Odd
+  const newTeamACourts: CourtPositions = {
+    evenCourtPlayer: state.teamA.players[newTeamAIndices[0]], // Index 0 = new player in even court
+    oddCourtPlayer: state.teamA.players[newTeamAIndices[1]],  // Index 1 = remaining player in odd court
+  };
+
+  const newTeamBCourts: CourtPositions = {
+    evenCourtPlayer: state.teamB.players[newTeamBIndices[0]], // Index 0 = new player in even court
+    oddCourtPlayer: state.teamB.players[newTeamBIndices[1]],  // Index 1 = remaining player in odd court
+  };
+
+  // Determine serve: Leading team's new player (in even court) serves
+  const leadingTeam = state.teamAScore > state.teamBScore ? 'A' : 'B';
+  const newServerPlayer = leadingTeam === 'A' ? newTeamACourts.evenCourtPlayer : newTeamBCourts.evenCourtPlayer;
+
+  // Use helper function to correctly determine receiver based on server's court position
+  const newReceiverPlayer = getReceiverByServerForWuYun(
+    newServerPlayer,
+    leadingTeam,
+    newTeamACourts,
+    newTeamBCourts
+  );
+
+  return {
+    ...state,
+    currentPlayerIndices: {
+      teamA: newTeamAIndices,
+      teamB: newTeamBIndices,
+    },
+    teamACourtPositions: newTeamACourts,
+    teamBCourtPositions: newTeamBCourts,
+    currentServerTeam: leadingTeam,
+    currentServerPlayer: newServerPlayer,
+    currentReceiverPlayer: newReceiverPlayer,
+    lastRotationScore: Math.max(state.teamAScore, state.teamBScore), // Update to prevent duplicate rotation prompts
+  };
+}
+
+export function detectWuYunRotationThreshold(
+  scoreA: number,
+  scoreB: number,
+  teamA: WuYunLunBiTeam,
+  teamB: WuYunLunBiTeam
+): RotationInfo {
+  const maxScore = Math.max(scoreA, scoreB);
+  
+  if (maxScore === 0 || maxScore % 10 !== 0) {
+    return { isRotationPoint: false, benchedPlayers: [] };
+  }
+
+  const phase = (Math.floor(maxScore / 10) - 1) % 5;
+  
+  // Rules: 
+  // 0 (10pts): 1->3 (idx 0->2)
+  // 1 (20pts): 2->4 (idx 1->3)
+  // 2 (30pts): 3->5 (idx 2->4)
+  // 3 (40pts): 4->1 (idx 3->0)
+  // 4 (50pts): 5->2 (idx 4->1)
+  const rules = [
+    { outIdx: 0, inIdx: 2 },
+    { outIdx: 1, inIdx: 3 },
+    { outIdx: 2, inIdx: 4 },
+    { outIdx: 3, inIdx: 0 },
+    { outIdx: 4, inIdx: 1 },
+  ];
+
+  const rule = rules[phase];
+  
+  return {
+    isRotationPoint: true,
+    benchedPlayers: [
+      { team: 'A', out: teamA.players[rule.outIdx], in: teamA.players[rule.inIdx] },
+      { team: 'B', out: teamB.players[rule.outIdx], in: teamB.players[rule.inIdx] },
+    ]
+  };
+}
+
+// --- Legacy/Other Functions ---
+
 /**
  * 根据发球球员确定接发球球员
  * 规则3：A队单数区发球 → B队单数区接发；A队双数区发球 → B队双数区接发
@@ -72,22 +289,6 @@ function getReceiverByServer(
 
 /**
  * 双打发球轮换逻辑（完全按照设计文档实现）
- * 
- * 规则1 - 发球方得分：
- *   - 加分
- *   - 发球方两人交换位置（单数区↔双数区）
- *   - 同一人继续发球
- *   - 接发球方位置不变
- * 
- * 规则2 - 发球方失分：
- *   - 加分
- *   - 双方位置都不变
- *   - 转换发球权
- *   - 新发球方按分数单双选择发球人（单数→单数区球员，双数→双数区球员）
- * 
- * 规则3 - 接发球确定：
- *   - A队单数区发球 → B队单数区接发
- *   - A队双数区发球 → B队双数区接发
  */
 export function getNextDoublesServer(
   currentState: DoublesMatchState,
@@ -110,50 +311,39 @@ export function getNextDoublesServer(
   
   if (isScorer) {
     // 规则1：发球方得分
-    // 发球方交换位置，同一人继续发球
     nextServerTeam = currentServerTeam;
     nextServerPlayer = currentServerPlayer;
     
-    // 发球方交换位置
     if (currentServerTeam === 'A') {
       newTeamAPositions = {
         evenCourtPlayer: teamAPositions.oddCourtPlayer,
         oddCourtPlayer: teamAPositions.evenCourtPlayer,
       };
-      // 接发球方（B队）位置不变
       newTeamBPositions = teamBPositions;
     } else {
       newTeamBPositions = {
         evenCourtPlayer: teamBPositions.oddCourtPlayer,
         oddCourtPlayer: teamBPositions.evenCourtPlayer,
       };
-      // 接发球方（A队）位置不变
       newTeamAPositions = teamAPositions;
     }
     
-    // 根据新的位置确定接发球球员
     nextReceiverPlayer = getReceiverByServer(nextServerPlayer, nextServerTeam, newTeamAPositions, newTeamBPositions);
   } else {
     // 规则2：发球方失分（接发球方得分）
-    // 双方位置不变，转换发球权
     nextServerTeam = scoringTeam;
-    
-    // 位置都不变
     newTeamAPositions = teamAPositions;
     newTeamBPositions = teamBPositions;
     
-    // 新发球方按分数单双选择发球人
     const scoringTeamScore = scoringTeam === 'A' ? currentState.teamAScore : currentState.teamBScore;
     const scoringTeamPositions = scoringTeam === 'A' ? teamAPositions : teamBPositions;
     
-    // 单数分→单数区球员发球，双数分→双数区球员发球
     if (scoringTeamScore % 2 === 1) {
       nextServerPlayer = scoringTeamPositions.oddCourtPlayer;
     } else {
       nextServerPlayer = scoringTeamPositions.evenCourtPlayer;
     }
     
-    // 根据新发球人位置确定接发球人
     nextReceiverPlayer = getReceiverByServer(nextServerPlayer, nextServerTeam, newTeamAPositions, newTeamBPositions);
   }
   
