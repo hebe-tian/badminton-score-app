@@ -16,14 +16,34 @@ export default function WuYunLunBiSetup({
 }: WuYunLunBiSetupProps): ReactNode {
   const { teamA, teamB } = config;
 
+  const getDefaultPlayerName = (team: 'A' | 'B', index: number): string => {
+    return `${team}${index + 1}`;
+  };
+
   const updateTeamPlayer = (team: 'A' | 'B', index: number, value: string) => {
     const teamData = team === 'A' ? teamA : teamB;
     const newPlayers: [string, string, string, string, string] = [...teamData.players];
-    newPlayers[index] = value;
+    // If input is empty, use default name (A1-A5, B1-B5)
+    newPlayers[index] = value.trim() || getDefaultPlayerName(team, index);
     if (team === 'A') {
       onConfigChange({ teamA: { ...teamA, players: newPlayers } });
     } else {
       onConfigChange({ teamB: { ...teamB, players: newPlayers } });
+    }
+  };
+
+  const handleFocus = (team: 'A' | 'B', index: number) => {
+    const teamData = team === 'A' ? teamA : teamB;
+    const defaultName = getDefaultPlayerName(team, index);
+    // Clear the input if it contains the default name
+    if (teamData.players[index] === defaultName) {
+      const newPlayers: [string, string, string, string, string] = [...teamData.players];
+      newPlayers[index] = '';
+      if (team === 'A') {
+        onConfigChange({ teamA: { ...teamA, players: newPlayers } });
+      } else {
+        onConfigChange({ teamB: { ...teamB, players: newPlayers } });
+      }
     }
   };
 
@@ -53,6 +73,8 @@ export default function WuYunLunBiSetup({
                 type="text"
                 value={name}
                 onChange={(e) => updateTeamPlayer('A', index, e.target.value)}
+                onFocus={() => handleFocus('A', index)}
+                onBlur={() => updateTeamPlayer('A', index, name)}
                 placeholder={`A${index + 1}`}
                 className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white"
               />
@@ -71,6 +93,8 @@ export default function WuYunLunBiSetup({
                 type="text"
                 value={name}
                 onChange={(e) => updateTeamPlayer('B', index, e.target.value)}
+                onFocus={() => handleFocus('B', index)}
+                onBlur={() => updateTeamPlayer('B', index, name)}
                 placeholder={`B${index + 1}`}
                 className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-300 focus:border-pink-300 transition-all text-gray-800 bg-white"
               />
@@ -81,7 +105,7 @@ export default function WuYunLunBiSetup({
         <div className="bg-white bg-opacity-90 rounded-3xl shadow-lg p-6 space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              首发发球球员 (仅限 A1/A2/B1/B2)
+              发球球员 (仅限 A1/A2/B1/B2)
             </label>
             <select
               value={config.firstServerPlayer}
@@ -104,7 +128,7 @@ export default function WuYunLunBiSetup({
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              首发接发球球员
+              接发球球员
             </label>
             <select
               value={config.firstReceiverPlayer}
