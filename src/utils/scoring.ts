@@ -432,13 +432,17 @@ export function addScoreHistoryEntry(
   history: ScoreHistoryEntry[],
   scoringSide: string,
   teamAScore: number,
-  teamBScore: number
+  teamBScore: number,
+  scorers?: string[],
+  onCourtPlayers?: { teamA: [string, string]; teamB: [string, string] }
 ): ScoreHistoryEntry {
   const entry: ScoreHistoryEntry = {
     sequenceNumber: history.length + 1,
     scoringSide,
     teamAScore,
     teamBScore,
+    scorers,
+    onCourtPlayers,
   };
   return entry;
 }

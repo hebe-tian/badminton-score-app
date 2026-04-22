@@ -1,9 +1,11 @@
 import { useState, useEffect, type ReactNode } from 'react';
-import type { WuYunLunBiMatchState, RotationInfo } from '../types';
+import type { WuYunLunBiMatchState, RotationInfo, ScoreHistory } from '../types';
 import { detectWuYunRotationThreshold } from '../utils/scoring';
+import ScoreRecordModal from './ScoreRecordModal';
 
 interface WuYunLunBiMatchProps {
   state: WuYunLunBiMatchState;
+  scoreHistory: ScoreHistory;
   onScore: (scoringTeam: 'A' | 'B') => void;
   onConfirmRotation: (info: RotationInfo) => void;
   onRestart: () => void;
@@ -12,6 +14,7 @@ interface WuYunLunBiMatchProps {
 
 export default function WuYunLunBiMatch({
   state,
+  scoreHistory,
   onScore,
   onConfirmRotation,
   onRestart,
@@ -32,6 +35,19 @@ export default function WuYunLunBiMatch({
 
   const [showRotationModal, setShowRotationModal] = useState(false);
   const [pendingRotation, setPendingRotation] = useState<RotationInfo | null>(null);
+  const [showRecord, setShowRecord] = useState(false);
+
+  useEffect(() => {
+    if (winner && !showRecord) {
+      setShowRecord(true);
+    }
+  }, [winner]);
+
+  const handleBackToHome = () => {
+    setShowRecord(false);
+    onRestart(); // 先重置当前比赛状态
+    onBack();    // 再返回主页
+  };
 
   useEffect(() => {
     if (!winner) {
@@ -175,24 +191,14 @@ export default function WuYunLunBiMatch({
           </div>
         </div>
 
-        {winner && (
-          <div className="bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-3xl p-6 text-center mb-4 shadow-lg">
-            <div className="text-lg font-bold mb-2">比赛结束</div>
-            <div className="text-3xl font-bold">
-              {winner === 'A' ? 'A队' : 'B队'} 获胜！
-            </div>
-            <div className="text-xl mt-2">
-              {teamAScore} : {teamBScore}
-            </div>
-            <div className="flex gap-4 mt-6">
-              <button
-                onClick={onRestart}
-                className="flex-1 py-3 bg-white text-pink-500 font-bold rounded-xl hover:bg-gray-100 transition-colors"
-              >
-                重新开始
-              </button>
-            </div>
-          </div>
+        {winner && showRecord && (
+          <ScoreRecordModal 
+            entries={scoreHistory.entries}
+            mode="wu-yun-lun-bi"
+            onClose={() => setShowRecord(false)}
+            onBackToHome={handleBackToHome}
+            themeColor="pink"
+          />
         )}
       </div>
     </div>

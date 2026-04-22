@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import type { SinglesMatchState, ScoreHistory } from '../types';
+import ScoreRecordModal from './ScoreRecordModal';
 
 interface SinglesMatchProps {
   state: SinglesMatchState;
@@ -17,6 +18,19 @@ export default function SinglesMatch({
   onBack,
 }: SinglesMatchProps): ReactNode {
   const { player1Name, player2Name, player1Score, player2Score, currentServer, winner } = state;
+  const [showRecord, setShowRecord] = useState(false);
+
+  useEffect(() => {
+    if (winner && !showRecord) {
+      setShowRecord(true);
+    }
+  }, [winner]);
+
+  const handleBackToHome = () => {
+    setShowRecord(false);
+    onRestart(); // 先重置当前比赛状态
+    onBack();    // 再返回主页
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-cyan-50 flex flex-col">
@@ -74,52 +88,14 @@ export default function SinglesMatch({
           </div>
         </div>
 
-        {winner && (
-          <div className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white rounded-3xl p-6 text-center mb-4 shadow-lg">
-            <div className="text-lg font-bold mb-2">比赛结束</div>
-            <div className="text-3xl font-bold">
-              {winner === 1 ? player1Name : player2Name} 获胜！
-            </div>
-            <div className="text-xl mt-2">
-              {player1Score} : {player2Score}
-            </div>
-            <div className="flex gap-4 mt-6">
-              <button
-                onClick={onRestart}
-                className="flex-1 py-3 bg-white text-blue-500 font-bold rounded-xl hover:bg-gray-100 transition-colors"
-              >
-                重新开始
-              </button>
-            </div>
-          </div>
-        )}
-
-        {winner && scoreHistory.entries.length > 0 && (
-          <div className="bg-white bg-opacity-90 rounded-3xl shadow-lg p-4 flex-1 overflow-hidden flex flex-col">
-            <h3 className="text-lg font-bold text-gray-800 mb-3 text-center">得分历史</h3>
-            <div className="flex-1 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-white bg-opacity-90">
-                  <tr className="text-gray-500 border-b">
-                    <th className="py-2 text-center">序号</th>
-                    <th className="py-2 text-center">得分方</th>
-                    <th className="py-2 text-center">{player1Name}</th>
-                    <th className="py-2 text-center">{player2Name}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {scoreHistory.entries.map((entry) => (
-                    <tr key={entry.sequenceNumber} className="border-b">
-                      <td className="py-2 text-center">{entry.sequenceNumber}</td>
-                      <td className="py-2 text-center">{entry.scoringSide}</td>
-                      <td className="py-2 text-center">{entry.teamAScore}</td>
-                      <td className="py-2 text-center">{entry.teamBScore}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {winner && showRecord && (
+          <ScoreRecordModal 
+            entries={scoreHistory.entries}
+            mode="singles"
+            onClose={() => setShowRecord(false)}
+            onBackToHome={handleBackToHome}
+            themeColor="blue"
+          />
         )}
       </div>
     </div>

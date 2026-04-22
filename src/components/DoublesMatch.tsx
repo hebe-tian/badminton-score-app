@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import type { DoublesMatchState, ScoreHistory } from '../types';
+import ScoreRecordModal from './ScoreRecordModal';
 
 interface DoublesMatchProps {
   state: DoublesMatchState;
@@ -28,6 +29,20 @@ export default function DoublesMatch({
     teamAPositions,
     teamBPositions
   } = state;
+
+  const [showRecord, setShowRecord] = useState(false);
+
+  useEffect(() => {
+    if (winner && !showRecord) {
+      setShowRecord(true);
+    }
+  }, [winner]);
+
+  const handleBackToHome = () => {
+    setShowRecord(false);
+    onRestart(); // 先重置当前比赛状态
+    onBack();    // 再返回主页
+  };
 
   // 根据球员标识符（A1/A2/B1/B2）获取显示名称
   const getPlayerDisplayName = (playerId: string): string => {
@@ -167,52 +182,14 @@ export default function DoublesMatch({
           </div>
         </div>
 
-        {winner && (
-          <div className="bg-gradient-to-r from-green-400 to-emerald-400 text-white rounded-3xl p-6 text-center mb-4 shadow-lg">
-            <div className="text-lg font-bold mb-2">比赛结束</div>
-            <div className="text-3xl font-bold">
-              {winner === 'A' ? 'A队' : 'B队'} 获胜！
-            </div>
-            <div className="text-xl mt-2">
-              {teamAScore} : {teamBScore}
-            </div>
-            <div className="flex gap-4 mt-6">
-              <button
-                onClick={onRestart}
-                className="flex-1 py-3 bg-white text-green-500 font-bold rounded-xl hover:bg-gray-100 transition-colors"
-              >
-                重新开始
-              </button>
-            </div>
-          </div>
-        )}
-
-        {winner && scoreHistory.entries.length > 0 && (
-          <div className="bg-white bg-opacity-90 rounded-3xl shadow-lg p-4 flex-1 overflow-hidden flex flex-col">
-            <h3 className="text-lg font-bold text-gray-800 mb-3 text-center">得分历史</h3>
-            <div className="flex-1 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-white bg-opacity-90">
-                  <tr className="text-gray-500 border-b">
-                    <th className="py-2 text-center">序号</th>
-                    <th className="py-2 text-center">得分方</th>
-                    <th className="py-2 text-center">A队</th>
-                    <th className="py-2 text-center">B队</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {scoreHistory.entries.map((entry) => (
-                    <tr key={entry.sequenceNumber} className="border-b">
-                      <td className="py-2 text-center">{entry.sequenceNumber}</td>
-                      <td className="py-2 text-center">{entry.scoringSide}</td>
-                      <td className="py-2 text-center">{entry.teamAScore}</td>
-                      <td className="py-2 text-center">{entry.teamBScore}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {winner && showRecord && (
+          <ScoreRecordModal 
+            entries={scoreHistory.entries}
+            mode="doubles"
+            onClose={() => setShowRecord(false)}
+            onBackToHome={handleBackToHome}
+            themeColor="green"
+          />
         )}
       </div>
     </div>

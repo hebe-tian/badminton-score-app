@@ -108,6 +108,11 @@ export interface ScoreHistoryEntry {
   scoringSide: string;
   teamAScore: number;
   teamBScore: number;
+  scorers?: string[]; // Names of the players who scored
+  onCourtPlayers?: { // Snapshot of players on court at the time of scoring (for WuYunLunBi)
+    teamA: [string, string];
+    teamB: [string, string];
+  };
 }
 
 export interface ScoreHistory {

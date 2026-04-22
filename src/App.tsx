@@ -24,6 +24,7 @@ import {
   handleWuYunServerScores,
   handleWuYunReceiverScores,
   applyWuYunRotation,
+  addScoreHistoryEntry,
 } from './utils/scoring';
 
 type AppView = 'mode-select' | 'singles-setup' | 'singles-match' | 'doubles-setup' | 'doubles-match' | 'wu-yun-lun-bi-setup' | 'wu-yun-lun-bi-match';
@@ -106,6 +107,17 @@ function App() {
         finalScore: { teamA: newState.player1Score, teamB: newState.player2Score }
       };
     }
+
+    // Update history
+    const scorerName = scoringPlayer === 1 ? newState.player1Name : newState.player2Name;
+    const newEntry = addScoreHistoryEntry(
+      singlesHistory.entries,
+      scorerName,
+      newState.player1Score,
+      newState.player2Score,
+      [scorerName]
+    );
+    setSinglesHistory(prev => ({ ...prev, entries: [...prev.entries, newEntry] }));
 
     setSinglesState(newState);
   };
@@ -192,6 +204,19 @@ function App() {
       };
     }
 
+    // Update history
+    const scoringTeamPlayers = scoringTeam === 'A' 
+      ? [newState.teamA.player1Name, newState.teamA.player2Name]
+      : [newState.teamB.player1Name, newState.teamB.player2Name];
+    const newEntry = addScoreHistoryEntry(
+      doublesHistory.entries,
+      scoringTeam,
+      newState.teamAScore,
+      newState.teamBScore,
+      scoringTeamPlayers
+    );
+    setDoublesHistory(prev => ({ ...prev, entries: [...prev.entries, newEntry] }));
+
     setDoublesState(newState);
   };
 
@@ -267,6 +292,24 @@ function App() {
       };
     }
 
+    // Update history with court positions snapshot
+    const scoringTeamPlayers = scoringTeam === 'A'
+      ? [newState.teamACourtPositions.evenCourtPlayer, newState.teamACourtPositions.oddCourtPlayer]
+      : [newState.teamBCourtPositions.evenCourtPlayer, newState.teamBCourtPositions.oddCourtPlayer];
+    
+    const newEntry = addScoreHistoryEntry(
+      wuYunLunBiHistory.entries,
+      scoringTeam,
+      newState.teamAScore,
+      newState.teamBScore,
+      scoringTeamPlayers,
+      {
+        teamA: [newState.teamACourtPositions.evenCourtPlayer, newState.teamACourtPositions.oddCourtPlayer],
+        teamB: [newState.teamBCourtPositions.evenCourtPlayer, newState.teamBCourtPositions.oddCourtPlayer]
+      }
+    );
+    setWuYunLunBiHistory(prev => ({ ...prev, entries: [...prev.entries, newEntry] }));
+
     setWuYunLunBiState(newState);
   };
 
@@ -336,6 +379,7 @@ function App() {
       setDoublesHistory({ entries: [], matchMode: 'doubles' });
     } else if (view === 'wu-yun-lun-bi-match') {
       handleWuYunLunBiStart();
+      setWuYunLunBiHistory({ entries: [], matchMode: 'wu-yun-lun-bi' });
     }
   };
 
@@ -395,6 +439,7 @@ function App() {
       {view === 'wu-yun-lun-bi-match' && wuYunLunBiState && (
         <WuYunLunBiMatch
           state={wuYunLunBiState}
+          scoreHistory={wuYunLunBiHistory}
           onScore={handleWuYunLunBiScore}
           onConfirmRotation={handleWuYunLunBiRotationConfirm}
           onRestart={handleRestart}
