@@ -4,17 +4,17 @@ export interface SinglesMatchConfig {
   mode: 'singles';
   matchPoint: MatchPoint;
   extendMatch: boolean;
-  player1Name: string;
-  player2Name: string;
-  firstServer: 1 | 2;
+  teamAName: string;
+  teamBName: string;
+  firstServer: 'A' | 'B';
 }
 
 export interface SinglesMatchState extends SinglesMatchConfig {
-  player1Score: number;
-  player2Score: number;
-  currentServer: 1 | 2;
+  teamAScore: number;
+  teamBScore: number;
+  currentServer: 'A' | 'B';
   isFinished: boolean;
-  winner: 1 | 2 | null;
+  winner: 'A' | 'B' | null;
 }
 
 export interface DoublesTeam {

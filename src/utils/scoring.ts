@@ -22,20 +22,20 @@ export interface RotationInfo {
 }
 
 export function isMatchFinished(
-  score1: number,
-  score2: number,
+  scoreA: number,
+  scoreB: number,
   matchPoint: number,
   extendMatch: boolean
 ): MatchFinishedResult {
   if (!extendMatch) {
-    if (score1 >= matchPoint) return { finished: true, winner: '1' };
-    if (score2 >= matchPoint) return { finished: true, winner: '2' };
+    if (scoreA >= matchPoint) return { finished: true, winner: 'A' };
+    if (scoreB >= matchPoint) return { finished: true, winner: 'B' };
   } else {
-    if (score1 >= matchPoint && score1 - score2 >= 2) {
-      return { finished: true, winner: '1' };
+    if (scoreA >= matchPoint && scoreA - scoreB >= 2) {
+      return { finished: true, winner: 'A' };
     }
-    if (score2 >= matchPoint && score2 - score1 >= 2) {
-      return { finished: true, winner: '2' };
+    if (scoreB >= matchPoint && scoreB - scoreA >= 2) {
+      return { finished: true, winner: 'B' };
     }
   }
   return { finished: false, winner: null };
@@ -52,10 +52,10 @@ export function isWuYunLunBiMatchFinished(
 }
 
 export function getNextSinglesServer(
-  _currentServer: 1 | 2,
-  scoringPlayer: 1 | 2
-): 1 | 2 {
-  return scoringPlayer;
+  _currentServer: 'A' | 'B',
+  scoringTeam: 'A' | 'B'
+): 'A' | 'B' {
+  return scoringTeam;
 }
 
 // --- Helper Functions for Court Positioning ---

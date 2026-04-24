@@ -5,7 +5,7 @@ import ScoreRecordModal from './ScoreRecordModal';
 interface SinglesMatchProps {
   state: SinglesMatchState;
   scoreHistory: ScoreHistory;
-  onScore: (scoringPlayer: 1 | 2) => void;
+  onScore: (scoringTeam: 'A' | 'B') => void;
   onRestart: () => void;
   onBack: () => void;
 }
@@ -17,7 +17,7 @@ export default function SinglesMatch({
   onRestart,
   onBack,
 }: SinglesMatchProps): ReactNode {
-  const { player1Name, player2Name, player1Score, player2Score, currentServer, winner } = state;
+  const { teamAName, teamBName, teamAScore, teamBScore, currentServer, winner } = state;
   const [showRecord, setShowRecord] = useState(false);
 
   useEffect(() => {
@@ -45,40 +45,40 @@ export default function SinglesMatch({
         <div className="bg-white bg-opacity-90 rounded-3xl shadow-lg p-6 mb-4">
           <div className="text-center mb-4">
             <span className="text-sm text-blue-400 font-medium">
-              发球方: {currentServer === 1 ? player1Name : player2Name}
+              发球方: {currentServer === 'A' ? teamAName : teamBName}
             </span>
           </div>
 
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="text-center flex-1">
-              <div className={`text-sm font-medium mb-2 ${currentServer === 1 ? 'text-blue-400' : 'text-gray-500'}`}>
-                {currentServer === 1 && <span className="mr-1">发</span>}
-                {player1Name}
+              <div className={`text-sm font-medium mb-2 ${currentServer === 'A' ? 'text-blue-400' : 'text-gray-500'}`}>
+                {currentServer === 'A' && <span className="mr-1">发</span>}
+                {teamAName}
               </div>
-              <div className="text-6xl font-bold text-gray-800">{player1Score}</div>
+              <div className="text-6xl font-bold text-gray-800">{teamAScore}</div>
               <button
-                onClick={() => onScore(1)}
+                onClick={() => onScore('A')}
                 disabled={!!winner}
                 className="mt-4 w-full py-3 bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                +1
+                A队得分
               </button>
             </div>
 
             <div className="text-3xl font-bold text-gray-300">:</div>
 
             <div className="text-center flex-1">
-              <div className={`text-sm font-medium mb-2 ${currentServer === 2 ? 'text-blue-400' : 'text-gray-500'}`}>
-                {currentServer === 2 && <span className="mr-1">发</span>}
-                {player2Name}
+              <div className={`text-sm font-medium mb-2 ${currentServer === 'B' ? 'text-blue-400' : 'text-gray-500'}`}>
+                {currentServer === 'B' && <span className="mr-1">发</span>}
+                {teamBName}
               </div>
-              <div className="text-6xl font-bold text-gray-800">{player2Score}</div>
+              <div className="text-6xl font-bold text-gray-800">{teamBScore}</div>
               <button
-                onClick={() => onScore(2)}
+                onClick={() => onScore('B')}
                 disabled={!!winner}
                 className="mt-4 w-full py-3 bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                +1
+                B队得分
               </button>
             </div>
           </div>
@@ -95,6 +95,9 @@ export default function SinglesMatch({
             onClose={() => setShowRecord(false)}
             onBackToHome={handleBackToHome}
             themeColor="blue"
+            matchResult={scoreHistory.matchResult}
+            teamAPlayers={[state.teamAName]}
+            teamBPlayers={[state.teamBName]}
           />
         )}
       </div>

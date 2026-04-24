@@ -198,6 +198,9 @@ export default function WuYunLunBiMatch({
             onClose={() => setShowRecord(false)}
             onBackToHome={handleBackToHome}
             themeColor="pink"
+            matchResult={scoreHistory.matchResult}
+            teamAPlayers={state.teamA.players}
+            teamBPlayers={state.teamB.players}
           />
         )}
       </div>

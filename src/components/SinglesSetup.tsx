@@ -32,12 +32,12 @@ export default function SinglesSetup({
         <div className="bg-white bg-opacity-90 rounded-3xl shadow-lg p-6 space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              A名称
+              A队球员
             </label>
             <input
               type="text"
-              value={config.player1Name}
-              onChange={(e) => onConfigChange({ player1Name: e.target.value })}
+              value={config.teamAName}
+              onChange={(e) => onConfigChange({ teamAName: e.target.value })}
               placeholder="A"
               className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-300 focus:border-blue-300 transition-all text-gray-800 bg-white"
             />
@@ -45,12 +45,12 @@ export default function SinglesSetup({
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              B名称
+              B队球员
             </label>
             <input
               type="text"
-              value={config.player2Name}
-              onChange={(e) => onConfigChange({ player2Name: e.target.value })}
+              value={config.teamBName}
+              onChange={(e) => onConfigChange({ teamBName: e.target.value })}
               placeholder="B"
               className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-300 focus:border-blue-300 transition-all text-gray-800 bg-white"
             />
@@ -113,28 +113,28 @@ export default function SinglesSetup({
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              首发选手
+              首发球员
             </label>
             <div className="flex gap-3">
               <button
-                onClick={() => onConfigChange({ firstServer: 1 })}
+                onClick={() => onConfigChange({ firstServer: 'A' })}
                 className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all font-medium ${
-                  config.firstServer === 1
+                  config.firstServer === 'A'
                     ? 'bg-blue-400 text-white border-blue-400 shadow-md'
                     : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
                 }`}
               >
-                {config.player1Name || 'A'}
+                {config.teamAName || 'A'}
               </button>
               <button
-                onClick={() => onConfigChange({ firstServer: 2 })}
+                onClick={() => onConfigChange({ firstServer: 'B' })}
                 className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all font-medium ${
-                  config.firstServer === 2
+                  config.firstServer === 'B'
                     ? 'bg-blue-400 text-white border-blue-400 shadow-md'
                     : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
                 }`}
               >
-                {config.player2Name || 'B'}
+                {config.teamBName || 'B'}
               </button>
             </div>
           </div>

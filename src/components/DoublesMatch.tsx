@@ -189,6 +189,9 @@ export default function DoublesMatch({
             onClose={() => setShowRecord(false)}
             onBackToHome={handleBackToHome}
             themeColor="green"
+            matchResult={scoreHistory.matchResult}
+            teamAPlayers={[state.teamA.player1Name, state.teamA.player2Name]}
+            teamBPlayers={[state.teamB.player1Name, state.teamB.player2Name]}
           />
         )}
       </div>

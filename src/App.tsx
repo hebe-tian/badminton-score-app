@@ -36,9 +36,9 @@ function App() {
     mode: 'singles',
     matchPoint: 21,
     extendMatch: false,
-    player1Name: 'A',
-    player2Name: 'B',
-    firstServer: 1,
+    teamAName: 'A',
+    teamBName: 'B',
+    firstServer: 'A',
   });
 
   const [singlesState, setSinglesState] = useState<SinglesMatchState | null>(null);
@@ -80,8 +80,8 @@ function App() {
   const handleSinglesStart = () => {
     setSinglesState({
       ...singlesConfig,
-      player1Score: 0,
-      player2Score: 0,
+      teamAScore: 0,
+      teamBScore: 0,
       currentServer: singlesConfig.firstServer,
       isFinished: false,
       winner: null,
@@ -90,31 +90,31 @@ function App() {
     setView('singles-match');
   };
 
-  const handleSinglesScore = (scoringPlayer: 1 | 2) => {
+  const handleSinglesScore = (scoringTeam: 'A' | 'B') => {
     if (!singlesState) return;
     const newState = { ...singlesState };
-    if (scoringPlayer === 1) newState.player1Score += 1;
-    else newState.player2Score += 1;
+    if (scoringTeam === 'A') newState.teamAScore += 1;
+    else newState.teamBScore += 1;
 
-    newState.currentServer = getNextSinglesServer(newState.currentServer, scoringPlayer);
+    newState.currentServer = getNextSinglesServer(newState.currentServer, scoringTeam);
 
-    const result = isMatchFinished(newState.player1Score, newState.player2Score, newState.matchPoint, newState.extendMatch);
-    if (result.finished && (result.winner === '1' || result.winner === '2')) {
+    const result = isMatchFinished(newState.teamAScore, newState.teamBScore, newState.matchPoint, newState.extendMatch);
+    if (result.finished) {
       newState.isFinished = true;
-      newState.winner = result.winner === '1' ? 1 : 2;
+      newState.winner = result.winner as 'A' | 'B';
       singlesHistory.matchResult = {
-        winner: result.winner,
-        finalScore: { teamA: newState.player1Score, teamB: newState.player2Score }
+        winner: result.winner as 'A' | 'B',
+        finalScore: { teamA: newState.teamAScore, teamB: newState.teamBScore }
       };
     }
 
     // Update history
-    const scorerName = scoringPlayer === 1 ? newState.player1Name : newState.player2Name;
+    const scorerName = scoringTeam === 'A' ? newState.teamAName : newState.teamBName;
     const newEntry = addScoreHistoryEntry(
       singlesHistory.entries,
-      scorerName,
-      newState.player1Score,
-      newState.player2Score,
+      scoringTeam,
+      newState.teamAScore,
+      newState.teamBScore,
       [scorerName]
     );
     setSinglesHistory(prev => ({ ...prev, entries: [...prev.entries, newEntry] }));
@@ -327,8 +327,8 @@ function App() {
     if (view === 'singles-match') {
       setSinglesState({
         ...singlesConfig,
-        player1Score: 0,
-        player2Score: 0,
+        teamAScore: 0,
+        teamBScore: 0,
         currentServer: singlesConfig.firstServer,
         isFinished: false,
         winner: null,
