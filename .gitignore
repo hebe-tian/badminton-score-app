@@ -35,6 +35,9 @@ dist-ssr
 coverage
 .nyc_output
 
+# Vitest
+junit-report.xml
+
 # TypeScript cache
 *.tsbuildinfo
 
