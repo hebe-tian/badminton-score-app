@@ -1,5 +1,40 @@
 # 📦 部署指南
 
+## CI/CD 自动化测试与部署
+
+本项目配置了完整的 GitHub Actions CI/CD 流程：
+
+### 自动化工作流
+
+1. **Test & Build** (`.github/workflows/test.yml`)
+   - 自动运行 32+ 条单元测试
+   - 生成覆盖率报告（目标：整体 ≥60%，核心 ≥80%）
+   - 构建生产版本
+   - 触发条件：push 到 main/develop 或 PR
+
+2. **Test Report** (`.github/workflows/test-report.yml`)
+   - 在 PR 中显示测试结果评论
+   - 使用 JUnit 报告格式
+
+3. **Deploy to GitHub Pages** (`.github/workflows/deploy.yml`)
+   - 自动部署到 GitHub Pages
+   - 触发条件：push 到 main 分支
+
+### 本地测试命令
+
+```bash
+# 运行所有测试
+npm test
+
+# 监听模式（开发时使用）
+npm run test:watch
+
+# 生成覆盖率报告
+npm run test:coverage
+```
+
+---
+
 ## 生产环境构建
 
 ### 1. 构建项目

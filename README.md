@@ -48,6 +48,13 @@
 - ⚡ 极速加载，Vite 构建优化
 - 🔄 状态管理完善，操作流畅
 
+### 🧪 完善的测试体系
+
+- ✅ **单元测试**：32+ 条核心业务逻辑测试用例
+- ✅ **高覆盖率**：语句覆盖率 88.7%，分支覆盖率 75.47%
+- ✅ **自动化 CI/CD**：GitHub Actions 自动测试和部署
+- ✅ **PR 质量保障**：自动测试报告和覆盖率检查
+
 ## 🚀 快速开始
 
 ### 环境要求
@@ -228,6 +235,14 @@ npm run preview
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 开启 Pull Request
+
+### 🧪 测试要求
+
+- 所有 PR 必须通过自动化测试
+- 新增核心逻辑需要编写单元测试
+- 覆盖率要求：整体 ≥60%，核心文件 ≥80%
+- 运行测试：`npm test`
+- 查看覆盖率：`npm run test:coverage`
 
 ## 📄 许可证
 

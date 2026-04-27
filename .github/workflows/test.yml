@@ -1,0 +1,72 @@
+name: Test & Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: badminton-score-app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./badminton-score-app
+        run: npm ci
+
+      - name: Run tests
+        working-directory: ./badminton-score-app
+        run: npm test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report
+          path: badminton-score-app/junit-report.xml
+
+      - name: Generate coverage report
+        working-directory: ./badminton-score-app
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./badminton-score-app/coverage
+          flags: unittests
+          fail_ci_if_error: false
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: badminton-score-app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./badminton-score-app
+        run: npm ci
+
+      - name: Build
+        working-directory: ./badminton-score-app
+        run: npm run build
